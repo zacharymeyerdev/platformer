@@ -1,25 +1,17 @@
 # Updating the Python code for 'player.py' with comprehensive features
 
-updated_player_py_code_v5 = """
 import pygame
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, platforms, enemies, powerups):
         super().__init__()
-        # Load sprite sheets or individual sprites here
-        # Using simple surfaces as placeholders
+        # Load actual sprite sheets or individual sprites here
         self.sprites = {
-            'idle': [pygame.Surface((50, 50)) for _ in range(4)],
-            'jump': pygame.Surface((50, 50)),
-            'walk': [pygame.Surface((50, 50)) for _ in range(6)],
-            'powerup': pygame.Surface((50, 50))  # Example for a power-up state
+            'idle': self.load_sprites('idle_spritesheet.png', 4),
+            'jump': self.load_sprite('jump_sprite.png'),
+            'walk': self.load_sprites('walk_spritesheet.png', 6),
+            'powerup': self.load_sprite('powerup_sprite.png')
         }
-        for sprite in self.sprites['idle']:
-            sprite.fill((255, 0, 0))
-        self.sprites['jump'].fill((0, 255, 0))
-        for sprite in self.sprites['walk']:
-            sprite.fill((0, 0, 255))
-        self.sprites['powerup'].fill((255, 255, 0))  # Different color for power-up state
 
         self.current_sprite = 'idle'
         self.image = self.sprites[self.current_sprite][0]
@@ -31,10 +23,21 @@ class Player(pygame.sprite.Sprite):
         self.enemies = enemies
         self.powerups = powerups
         self.is_jumping = False
-        self.is_powered_up = False  # Power-up state
+        self.is_powered_up = False
         self.walking_frame = 0
         self.animation_frame = 0
         self.animation_speed = 0.1
+
+    def load_sprite(self, path):
+        return pygame.image.load(path).convert_alpha()
+
+    def load_sprites(self, path, num_sprites):
+        # Load a spritesheet and divide it into individual frames
+        # Assuming the spritesheet is in a horizontal layout
+        sheet = self.load_sprite(path)
+        width = sheet.get_width() // num_sprites
+        height = sheet.get_height()
+        return [sheet.subsurface(pygame.Rect(i * width, 0, width, height)) for i in range(num_sprites)]
 
     def input(self):
         keys = pygame.key.get_pressed()
@@ -85,6 +88,7 @@ class Player(pygame.sprite.Sprite):
         self.input()
         self.apply_gravity()
         self.check_collisions()
+        self.animate()
 
     def check_collisions(self):
         # Check for power-up collisions
@@ -96,4 +100,8 @@ class Player(pygame.sprite.Sprite):
         if enemy_hits:
             # Handle player-enemy collision
             pass
-"""
+
+    def animate(self):
+        # Update the walking_frame based on animation_frame and current_sprite
+        self.image = self.sprites[self.current_sprite][int(self.animation_frame) % len(self.sprites[self.current_sprite])]
+        self.animation_frame += self.animation_speed
